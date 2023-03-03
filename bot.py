@@ -10,6 +10,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # явно указываем версию python-telegram-bot
 import telegram.version
+
 telegram.version.__version__ = '13.8'
 
 # токен бота Telegram
@@ -41,17 +42,17 @@ with open("chat_ids.txt", "w") as f:
     for chat_id in saved_chat_ids:
         f.write(str(chat_id) + "\n")
 
-#api ключ для сбора данных о погоде
+# api ключ для сбора данных о погоде
 owm = pyowm.OWM(api_key='Ваш API с погодой')
 
-
-#список сообщений для рассылки
+# список сообщений для рассылки
 MESSAGES = [
     "Привет!!",
     "Как дела?"
 ]
 
-#приветственное собщение после первого диалога с ботом
+
+# приветственное собщение после первого диалога с ботом
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Привет. Через час вернусь!")
     return
@@ -72,6 +73,7 @@ def echo(update, context):
     message = random.choice(MESSAGES)
     context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
+
 def send_message_at_4_30(context):
     """отправляет утреннее приветствие с текущей температурой в Самаре в градусах Цельсия всем чатам, указанным в файле chat_ids.txt."""
     owm = pyowm.OWM(api_key='Ваш API с погодой')
@@ -90,15 +92,20 @@ def send_message_at_4_30(context):
         except Exception as e:
             print(f"Ошибка отправки сообщения в чат {chat_id}: {str(e)}")
 
+
 updater = Updater(token='Ваш API Telegram', use_context=True)
+
 
 def hello(update, context):
     """отправляет приветственное сообщение и предлагает сыграть в игру камень-ножницы-бумага."""
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Привет! Давай сыграем в камень-ножницы-бумага. Напиши 'игра'.")
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text="Привет! Давай сыграем в камень-ножницы-бумага. Напиши 'игра'.")
+
 
 def game(update, context):
     """отправляет инструкцию, как выбрать ход в игре камень-ножницы-бумага."""
     context.bot.send_message(chat_id=update.effective_chat.id, text="Выбери камень (1), ножницы (2) или бумагу (3).")
+
 
 def play(update, context):
     """принимает ход игрока и выбирает случайный ход компьютера, затем определяет победителя и отправляет результат игры и предложение сыграть еще раз."""
@@ -112,18 +119,22 @@ def play(update, context):
         elif player_choice == '3':
             player_choice = 'бумага'
     result = get_result(player_choice, computer_choice)
-    context.bot.send_message(chat_id=update.effective_chat.id, text=f"Ты выбрал {player_choice}, я выбрал {computer_choice}. {result}")
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text=f"Ты выбрал {player_choice}, я выбрал {computer_choice}. {result}")
     context.bot.send_message(chat_id=update.effective_chat.id, text="Хочешь сыграть еще раз? (да/нет)")
+
 
 def repeat(update, context):
     """принимает ответ игрока на предложение сыграть еще раз и отправляет либо новую инструкцию, либо завершающее сообщение, в зависимости от ответа."""
     answer = update.message.text
     if answer.lower() in ['да', 'yes']:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Выбери камень (1), ножницы (2) или бумагу (3).")
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text="Выбери камень (1), ножницы (2) или бумагу (3).")
     elif answer.lower() in ['нет', 'no']:
         context.bot.send_message(chat_id=update.effective_chat.id, text="До встречи!")
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Напиши 'да' или 'нет'.")
+
 
 def get_result(player_choice, computer_choice):
     """определяет результат игры камень-ножницы-бумага."""
@@ -137,6 +148,7 @@ def get_result(player_choice, computer_choice):
         return "Ты победил!"
     else:
         return "Я победил!"
+
 
 def main():
     """Вызов функции main() является точкой входа в программу.
@@ -185,6 +197,7 @@ def main():
 
     updater.start_polling()
     updater.idle()
+
 
 if __name__ == '__main__':
     main()

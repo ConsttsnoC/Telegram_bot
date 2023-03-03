@@ -14,7 +14,6 @@
 <p align="center">
   <img src="https://img.shields.io/badge/ API-owm-green">
   <img src="https://img.shields.io/badge/Python-3.10.7-blue">
-  <img src="https://img.shields.io/badge/Deploy-Docker-blueviolet">
 </p>
 
  <div>
