@@ -8,16 +8,18 @@ import random
 import requests
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
+
+
 # явно указываем версию python-telegram-bot
 import telegram.version
-
 telegram.version.__version__ = '13.8'
 
 # токен бота Telegram
-bot_token = "Ваш API Telegram"
+bot_token = "Ваш_токен"
 
 # URL API Telegram для получения обновлений
 url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+
 
 # создаем список для хранения идентификаторов чатов
 saved_chat_ids = []
@@ -42,19 +44,18 @@ with open("chat_ids.txt", "w") as f:
     for chat_id in saved_chat_ids:
         f.write(str(chat_id) + "\n")
 
-# api ключ для сбора данных о погоде
-owm = pyowm.OWM(api_key='Ваш API с погодой')
+#api ключ для сбора данных о погоде
+owm = pyowm.OWM(api_key='Ваш API')
 
-# список сообщений для рассылки
+
+#список сообщений для рассылки
 MESSAGES = [
-    "Привет!!",
-    "Как дела?"
+    'Привет',
 ]
 
-
-# приветственное собщение после первого диалога с ботом
+#приветственное собщение после первого диалога с ботом
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Привет. Через час вернусь!")
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Добрый день")
     return
 
 
@@ -73,16 +74,15 @@ def echo(update, context):
     message = random.choice(MESSAGES)
     context.bot.send_message(chat_id=update.effective_chat.id, text=message)
 
-
 def send_message_at_4_30(context):
     """отправляет утреннее приветствие с текущей температурой в Самаре в градусах Цельсия всем чатам, указанным в файле chat_ids.txt."""
-    owm = pyowm.OWM(api_key='Ваш API с погодой')
+    owm = pyowm.OWM(api_key='Ваш API')
     mgr = owm.weather_manager()
     observation = mgr.weather_at_place('Samara, RU')
     w = observation.weather
     temperature = w.temperature('celsius')['temp']
 
-    message = f"Доброе утро,сейчас за бортом 9:00 : {temperature} градусов Цельсия!"
+    message = f"Доброе утро ю ноу,сейчас за бортом 9:00 : {temperature} градусов Цельсия!"
     with open('chat_ids.txt', 'r') as f:
         chat_ids = f.read().splitlines()
     for chat_id in chat_ids:
@@ -92,48 +92,60 @@ def send_message_at_4_30(context):
         except Exception as e:
             print(f"Ошибка отправки сообщения в чат {chat_id}: {str(e)}")
 
-
-updater = Updater(token='Ваш API Telegram', use_context=True)
-
+updater = Updater(token='Ваш ТОКЕН:', use_context=True)
 
 def hello(update, context):
     """отправляет приветственное сообщение и предлагает сыграть в игру камень-ножницы-бумага."""
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text="Привет! Давай сыграем в камень-ножницы-бумага. Напиши 'игра'.")
-
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Привет! Давай сыграем в камень-ножницы-бумага. Напиши 'игра'.")
 
 def game(update, context):
     """отправляет инструкцию, как выбрать ход в игре камень-ножницы-бумага."""
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Выбери камень (1), ножницы (2) или бумагу (3).")
-
+    if update.message.text.lower() == "игра":
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Выбери камень (1), ножницы (2) или бумагу (3).")
+        context.user_data['game_started'] = True
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Выбери 'игра', чтобы начать игру.")
 
 def play(update, context):
     """принимает ход игрока и выбирает случайный ход компьютера, затем определяет победителя и отправляет результат игры и предложение сыграть еще раз."""
-    computer_choice = random.choice(['камень', 'ножницы', 'бумага'])
-    player_choice = update.message.text
-    if player_choice in ['1', '2', '3']:
-        if player_choice == '1':
-            player_choice = 'камень'
-        elif player_choice == '2':
-            player_choice = 'ножницы'
-        elif player_choice == '3':
-            player_choice = 'бумага'
-    result = get_result(player_choice, computer_choice)
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text=f"Ты выбрал {player_choice}, я выбрал {computer_choice}. {result}")
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Хочешь сыграть еще раз? (да/нет)")
+    if not context.user_data.get("game_started"):
+        context.bot.send_message(chat_id=update.effective_chat.id, text=random.choice(MESSAGES))
+        return
 
+    if not context.user_data.get("playing"):
+        context.user_data["playing"] = True
+
+    computer_choice = random.choice(['камень', 'ножницы', 'бумага'])
+    player_choice = update.message.text.lower()
+    if player_choice in ['1', '2', '3', 'камень', 'ножницы', 'бумага']:
+        if player_choice in ['1', 'камень']:
+            player_choice = 'камень'
+        elif player_choice in ['2', 'ножницы']:
+            player_choice = 'ножницы'
+        elif player_choice in ['3', 'бумага']:
+            player_choice = 'бумага'
+
+        result = get_result(player_choice, computer_choice)
+        context.bot.send_message(chat_id=update.effective_chat.id, text=f"Ты выбрал {player_choice}, я выбрал {computer_choice}. {result}")
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Хочешь сыграть еще раз? (да/нет)")
+        context.user_data["playing"] = False
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Выбери камень (1), ножницы (2) или бумагу (3).")
 
 def repeat(update, context):
     """принимает ответ игрока на предложение сыграть еще раз и отправляет либо новую инструкцию, либо завершающее сообщение, в зависимости от ответа."""
     answer = update.message.text
     if answer.lower() in ['да', 'yes']:
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text="Выбери камень (1), ножницы (2) или бумагу (3).")
+        if context.user_data.get("game_started") == True:
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Выбери камень (1), ножницы (2) или бумагу (3).")
+            context.user_data["playing"] = False
+        else:
+            context.bot.send_message(chat_id=update.effective_chat.id, text=random.choice(MESSAGES))
     elif answer.lower() in ['нет', 'no']:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="До встречи!")
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Как скажешь!")
+        context.user_data["game_started"] = False
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Напиши 'да' или 'нет'.")
+        context.bot.send_message(chat_id=update.effective_chat.id, text=random.choice(MESSAGES))
 
 
 def get_result(player_choice, computer_choice):
@@ -149,13 +161,26 @@ def get_result(player_choice, computer_choice):
     else:
         return "Я победил!"
 
+def pogoda(update, context):
+    """Отправляет пользователю сообщение с текущей температурой в Самаре"""
+    owm = pyowm.OWM(api_key='Ваш API')
+    chat_id = update.message.chat_id
+    mgr = owm.weather_manager()
+    observation = mgr.weather_at_place('Samara, RU')
+    w = observation.weather
+    temperature = w.temperature('celsius')['temp']
+    message = f"Сейчас за бортом {temperature} градусов Цельсия."
+    context.bot.send_message(chat_id=chat_id, text=message)
+
 
 def main():
-    """Вызов функции main() является точкой входа в программу.
-    Включающая игру камень-ножницы-бумага и обработку команд и сообщений с помощью библиотеки python-telegram-bot.
-     Функция main() добавляет обработчики команд и сообщений, определяет периодические и ежедневные задачи, и запускает бота в режиме ожидания новых сообщений."""
-    updater = Updater(token='Ваш API Telegram', use_context=True)
+    updater = Updater(token='Ваш ТОКЕН', use_context=True)
     dp = updater.dispatcher
+
+ # заменяем RegexHandler на MessageHandler с фильтром Filters.regex
+    pogoda_handler = MessageHandler(Filters.regex(re.compile(r'погода', re.IGNORECASE)), pogoda)
+
+    dp.add_handler(pogoda_handler)
 
     # добавляем обработчик команды /start
     dp.add_handler(CommandHandler("start", start))
@@ -180,6 +205,7 @@ def main():
     # добавляем обработчик для выбора камня, ножниц или бумаги
     dp.add_handler(MessageHandler(Filters.regex('(?i)^(камень|ножницы|бумага|1|2|3)$'), play))
 
+
     # добавляем обработчик для обработки всех сообщений
     dp.add_handler(MessageHandler(Filters.text, echo))
 
@@ -197,7 +223,6 @@ def main():
 
     updater.start_polling()
     updater.idle()
-
 
 if __name__ == '__main__':
     main()
